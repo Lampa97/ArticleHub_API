@@ -1,4 +1,5 @@
 from motor.motor_asyncio import AsyncIOMotorClient
+from config import DB_URL
 
 
 class MongoDBConnector:
@@ -6,7 +7,9 @@ class MongoDBConnector:
         self.app = app
 
     async def startup_db_client(self):
-        self.app.mongodb_client = AsyncIOMotorClient("mongodb://localhost:27017")
+        self.app.mongodb_client = AsyncIOMotorClient(
+            DB_URL
+        )
         self.app.mongodb = self.app.mongodb_client["articlehub"]
 
     async def shutdown_db_client(self):

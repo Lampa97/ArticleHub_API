@@ -1,9 +1,10 @@
 from fastapi import FastAPI, HTTPException, status, Depends, Body
 from fastapi.security import OAuth2PasswordRequestForm
 from db import MongoDBConnector
-from models import User, Token, UserPublic, UserInDB
+from models import User, Token, UserPublic, UserInDB, Article
 from typing import Annotated
 from bson import ObjectId
+from datetime import datetime, timezone
 
 from datetime import timedelta
 from config import ACCESS_TOKEN_EXPIRE_MINUTES
@@ -77,3 +78,26 @@ async def get_profile(
         email=current_user.email,
         name=current_user.name
     )
+
+
+@app.post("/api/articles/", status_code=status.HTTP_201_CREATED)
+async def create_article(
+    current_user: Annotated[UserInDB, Depends(get_current_active_user)],
+    article: Article = Body(...)
+):
+    articles_collection = app.mongodb["articles"]
+    article_dict = article.model_dump()
+
+    article_dict["created_at"] = datetime.now(timezone.utc).isoformat()
+    article_dict["author"] = str(current_user.id)
+    
+    result = await articles_collection.insert_one(article_dict)
+
+
+    article_dict["id"] = str(result.inserted_id)
+
+        # Если в article_dict есть другие ObjectId, тоже преобразуйте их:
+    article_dict.pop("_id", None)
+
+    
+    return article_dict
