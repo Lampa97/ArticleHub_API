@@ -24,11 +24,3 @@ class UserPublic(BaseModel):
     id: str
     email: str
     name: str
-
-class Article(BaseModel):
-    id: Optional[str] = None
-    title: str
-    content: str
-    tags: Optional[list[str]] = []
-    author: Optional[str] = None  # foreign key (id пользователя)
-    created_at: Optional[str] = None

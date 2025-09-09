@@ -1,7 +1,7 @@
-from models import User, UserInDB, TokenData
+from models.auth import User, UserInDB, TokenData
 from passlib.context import CryptContext
 from datetime import datetime, timedelta, timezone
-from config import SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES
+from config.settings import SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES
 import jwt
 from fastapi import Request
 from fastapi.security import OAuth2PasswordBearer
@@ -12,6 +12,8 @@ from typing import Annotated
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login/")
+
+
 
 
 def verify_password(plain_password, hashed_password):
