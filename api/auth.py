@@ -9,7 +9,7 @@ from models.auth import Token, User, UserInDB, UserPublic
 from utils.auth import authenticate_user, create_access_token, get_current_active_user, get_password_hash
 from utils.get_collections import get_users_collection
 
-from services.tasks import send_welcome_email
+from .tasks import send_welcome_email
 
 router = APIRouter()
 

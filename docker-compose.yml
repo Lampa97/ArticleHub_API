@@ -48,7 +48,7 @@ services:
 
   celery:
     build: .
-    command: celery -A config worker -l INFO
+    command: celery -A config.celery.celery_app worker -l INFO
     env_file:
       - ./.env
     depends_on:
@@ -58,7 +58,7 @@ services:
 
   celery-beat:
     build: .
-    command: celery -A config beat -l INFO
+    command: celery -A config.celery.celery_app beat -l INFO
     env_file:
       - ./.env
     depends_on:

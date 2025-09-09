@@ -10,7 +10,7 @@ from utils.auth import get_current_active_user
 from utils.get_collections import get_articles_collection
 from utils.strip import change_id_name
 
-from services.tasks import analyze_article
+from .tasks import analyze_article
 
 router = APIRouter()
 
@@ -116,4 +116,8 @@ async def analyze_article_endpoint(
     articles_collection=Depends(get_articles_collection)
 ):
     analyze_article.delay(article_id)
-    return {"status": "Analysis started"}
+    article_dict = await articles_collection.find_one({"_id": ObjectId(article_id)})
+    if not article_dict:
+        raise HTTPException(status_code=404, detail="Article not found")
+    change_id_name(article_dict)
+    return article_dict
