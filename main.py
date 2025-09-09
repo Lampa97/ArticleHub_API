@@ -1,10 +1,8 @@
 from fastapi import FastAPI
-from config.db import MongoDBConnector
-from api.auth import router as auth_router
+
 from api.articles import router as articles_router
-
-
-
+from api.auth import router as auth_router
+from config.db import MongoDBConnector
 
 app = FastAPI()
 app.include_router(auth_router)

@@ -1,5 +1,6 @@
+from typing import List, Optional
+
 from pydantic import BaseModel, Field
-from typing import Optional, List
 
 
 class Article(BaseModel):
@@ -9,6 +10,7 @@ class Article(BaseModel):
     tags: Optional[list[str]] = []
     author: Optional[str] = None  # foreign key (id пользователя)
     created_at: Optional[str] = None
+
 
 class ArticleCreate(BaseModel):
     title: str = Field(..., example="My Article Title")
@@ -20,6 +22,6 @@ class ArticleCreate(BaseModel):
             "example": {
                 "title": "My Article Title",
                 "content": "Article content goes here.",
-                "tags": ["fastapi", "mongodb"]
+                "tags": ["fastapi", "mongodb"],
             }
         }
