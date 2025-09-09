@@ -89,3 +89,18 @@ async def update_article(
     updated_article = await articles_collection.find_one({"_id": ObjectId(article_id)})
     change_id_name(updated_article)
     return updated_article
+
+@router.delete("/api/articles/{article_id}/", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_article(
+    current_user: Annotated[UserInDB, Depends(get_current_active_user)],
+    article_id: str,
+    articles_collection=Depends(get_articles_collection)
+):
+    existing_article = await articles_collection.find_one({"_id": ObjectId(article_id)})
+    if not existing_article:
+        raise HTTPException(status_code=404, detail="Article not found")
+    if existing_article["author"] != str(current_user.id):
+        raise HTTPException(status_code=403, detail="Not authorized to delete this article")
+    
+    await articles_collection.delete_one({"_id": ObjectId(article_id)})
+    return None
