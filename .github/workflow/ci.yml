@@ -1,0 +1,82 @@
+name: Django CI
+
+on: [push]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: Install flake8
+        run: |
+          python -m pip install --upgrade pip
+          pip install flake8
+
+      - name: Run Flake8
+        run: flake8 .
+
+  build:
+    runs-on: ubuntu-latest
+    needs: lint
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Log in to Docker Hub
+        run: echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
+
+      - name: Build Docker image
+        run: docker build -t ${{ secrets.DOCKER_USERNAME }}/courses:${{ github.sha }} .
+
+      - name: Push Docker image
+        run: docker push ${{ secrets.DOCKER_USERNAME }}/courses:${{ github.sha }}
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      - name: Set up SSH
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_KEY }}
+
+      - name: Deploy to server
+        run: |
+            ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
+            
+            echo "Step 1: Pulling the latest code from the repository"
+            cd Restaurant-webapp
+            sudo git checkout develop
+            sudo git pull
+                    
+            echo "Step 2: Creating static folder"
+            
+            if [ -d "static" ]; then
+            echo "Static folder exists."
+            else
+            echo "Static folder does not exist. Creating it now."
+            mkdir static
+            fi
+          
+                             
+            echo "Step 3: Running docker commands on the remote server"
+            docker --version
+            docker compose version
+            sudo systemctl start docker
+            sudo systemctl enable docker
+            sudo sysctl vm.overcommit_memory=1
+            sudo docker compose down || true
+            sudo docker compose up -d --build
+            EOF
+          
+

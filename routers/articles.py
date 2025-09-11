@@ -21,17 +21,26 @@ async def create_article(
     article: ArticleCreate = Body(...),
     articles_collection=Depends(get_articles_collection),
 ):
-    article_dict = article.model_dump()
+    """
+    Create a new article.
 
+    This endpoint allows an authenticated user to create a new article.
+    The article's author is set to the current user's ID, and the creation time is recorded.
+
+    Args:
+        current_user (UserInDB): The currently authenticated user.
+        article (ArticleCreate): The article data provided in the request body.
+        articles_collection: MongoDB collection for articles.
+
+    Returns:
+        Article: The newly created article with its ID and metadata.
+    """
+    article_dict = article.model_dump()
     article_dict["created_at"] = datetime.now(timezone.utc).isoformat()
     article_dict["author"] = str(current_user.id)
-
     result = await articles_collection.insert_one(article_dict)
-
     article_dict["_id"] = str(result.inserted_id)
-
     change_id_name(article_dict)
-
     return Article(**article_dict)
 
 
@@ -42,6 +51,21 @@ async def list_articles(
     tags: str = Query(None),
     articles_collection=Depends(get_articles_collection),
 ):
+    """
+    List articles with optional search and tag filtering.
+
+    This endpoint returns a list of articles. You can filter articles by search term
+    (in title or content) and by tags.
+
+    Args:
+        current_user (UserInDB): The currently authenticated user.
+        search (str, optional): Search term for article title or content.
+        tags (str, optional): Comma-separated list of tags to filter articles.
+        articles_collection: MongoDB collection for articles.
+
+    Returns:
+        list[Article]: List of articles matching the filters.
+    """
     query = {}
     if search:
         query["$or"] = [
@@ -62,6 +86,20 @@ async def get_article(
     article_id: str,
     articles_collection=Depends(get_articles_collection),
 ):
+    """
+    Retrieve a single article by its ID.
+
+    Args:
+        current_user (UserInDB): The currently authenticated user.
+        article_id (str): The ID of the article to retrieve.
+        articles_collection: MongoDB collection for articles.
+
+    Raises:
+        HTTPException: If the article is not found.
+
+    Returns:
+        Article: The requested article.
+    """
     article_dict = await articles_collection.find_one({"_id": ObjectId(article_id)})
     if not article_dict:
         raise HTTPException(status_code=404, detail="Article not found")
@@ -76,6 +114,23 @@ async def update_article(
     article: Article = Body(...),
     articles_collection=Depends(get_articles_collection),
 ):
+    """
+    Update an existing article.
+
+    Only the author of the article can update it. You can update the title and/or content.
+
+    Args:
+        current_user (UserInDB): The currently authenticated user.
+        article_id (str): The ID of the article to update.
+        article (Article): The updated article data.
+        articles_collection: MongoDB collection for articles.
+
+    Raises:
+        HTTPException: If the article is not found or the user is not authorized.
+
+    Returns:
+        Article: The updated article.
+    """
     existing_article = await articles_collection.find_one({"_id": ObjectId(article_id)})
     if not existing_article:
         raise HTTPException(status_code=404, detail="Article not found")
@@ -100,6 +155,22 @@ async def delete_article(
     article_id: str,
     articles_collection=Depends(get_articles_collection),
 ):
+    """
+    Delete an article by its ID.
+
+    Only the author of the article can delete it.
+
+    Args:
+        current_user (UserInDB): The currently authenticated user.
+        article_id (str): The ID of the article to delete.
+        articles_collection: MongoDB collection for articles.
+
+    Raises:
+        HTTPException: If the article is not found or the user is not authorized.
+
+    Returns:
+        None
+    """
     existing_article = await articles_collection.find_one({"_id": ObjectId(article_id)})
     if not existing_article:
         raise HTTPException(status_code=404, detail="Article not found")
@@ -115,7 +186,25 @@ async def analyze_article_endpoint(
     article_id: str,
     articles_collection=Depends(get_articles_collection)
 ):
-    analyze_article.delay(article_id)
+    """
+    Analyze an article and return the updated article with analysis results.
+
+    This endpoint triggers an asynchronous Celery task to analyze the article (e.g., word count, unique tags).
+    The response waits for the task to complete (with a timeout) and then returns the updated article,
+    including the analysis results.
+
+    Args:
+        article_id (str): The ID of the article to analyze.
+        articles_collection: MongoDB collection for articles.
+
+    Raises:
+        HTTPException: If the article is not found.
+
+    Returns:
+        dict: The updated article document, including the 'analysis' field.
+    """
+    task = analyze_article.delay(article_id)
+    task.get(timeout=1)
     article_dict = await articles_collection.find_one({"_id": ObjectId(article_id)})
     if not article_dict:
         raise HTTPException(status_code=404, detail="Article not found")

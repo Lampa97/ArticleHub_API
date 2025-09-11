@@ -16,11 +16,26 @@ router = APIRouter(prefix="/api/v1/auth", tags=["Auth"])
 
 @router.post("/register/", status_code=status.HTTP_201_CREATED)
 async def register_user(user: User = Body(...), users_collection=Depends(get_users_collection)):
-    # Проверка на существование пользователя
+    """
+    Register a new user.
+
+    This endpoint allows a new user to register by providing their email, name, and password.
+    The password is hashed before storing in the database. If the user already exists,
+    an error is returned. After successful registration, a welcome email is sent asynchronously.
+
+    Args:
+        user (User): The user data provided in the request body.
+        users_collection: MongoDB collection for users.
+
+    Raises:
+        HTTPException: If the user already exists.
+
+    Returns:
+        dict: The registered user's ID, email, and name.
+    """
     existing = await users_collection.find_one({"email": user.email})
     if existing:
         raise HTTPException(status_code=400, detail="User already exists")
-    # Хэшируем пароль
     user_dict = user.model_dump()
     user_dict["hashed_password"] = get_password_hash(user.password)
     del user_dict["password"]
@@ -33,6 +48,23 @@ async def register_user(user: User = Body(...), users_collection=Depends(get_use
 async def login_for_access_token(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()], users_collection=Depends(get_users_collection)
 ):
+    """
+    Authenticate user and return access and refresh tokens.
+
+    This endpoint verifies the user's credentials and returns JWT access and refresh tokens
+    if authentication is successful. The access token is used for API requests, and the refresh token
+    can be used to obtain a new access token when the current one expires.
+
+    Args:
+        form_data (OAuth2PasswordRequestForm): The login form data (username and password).
+        users_collection: MongoDB collection for users.
+
+    Raises:
+        HTTPException: If authentication fails.
+
+    Returns:
+        Token: The access and refresh tokens.
+    """
     user = await authenticate_user(users_collection, form_data.username, form_data.password)
     if not user:
         raise HTTPException(
@@ -42,7 +74,6 @@ async def login_for_access_token(
         )
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(data={"sub": user.email}, expires_delta=access_token_expires)
-    # Генерация refresh token (например, срок жизни 7 дней)
     refresh_token_expires = timedelta(days=7)
     refresh_token = create_access_token(
         data={"sub": user.email, "type": "refresh"}, expires_delta=refresh_token_expires
@@ -63,4 +94,16 @@ async def login_for_access_token(
     },
 )
 async def get_profile(current_user: Annotated[UserInDB, Depends(get_current_active_user)]):
+    """
+    Get the current user's profile.
+
+    This endpoint returns the profile information of the currently authenticated user,
+    including their ID, email, and name.
+
+    Args:
+        current_user (UserInDB): The currently authenticated user.
+
+    Returns:
+        UserPublic: The user's public profile information.
+    """
     return UserPublic(id=current_user.id, email=current_user.email, name=current_user.name)

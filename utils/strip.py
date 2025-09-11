@@ -1,4 +1,7 @@
 def change_id_name(obj: dict | list):
+    """
+    Recursively change '_id' keys to 'id' in a dictionary or list of dictionaries.
+    """
     if isinstance(obj, dict):
         if "_id" in obj:
             obj["id"] = str(obj["_id"])
