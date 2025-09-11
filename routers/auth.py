@@ -9,12 +9,12 @@ from models.auth import Token, User, UserInDB, UserPublic
 from utils.auth import authenticate_user, create_access_token, get_current_active_user, get_password_hash
 from utils.get_collections import get_users_collection
 
-from .tasks import send_welcome_email
+from services.tasks import send_welcome_email
 
-router = APIRouter()
+router = APIRouter(prefix="/api/v1/auth", tags=["Auth"])
 
 
-@router.post("/api/auth/register/", status_code=status.HTTP_201_CREATED)
+@router.post("/register/", status_code=status.HTTP_201_CREATED)
 async def register_user(user: User = Body(...), users_collection=Depends(get_users_collection)):
     # Проверка на существование пользователя
     existing = await users_collection.find_one({"email": user.email})
@@ -29,7 +29,7 @@ async def register_user(user: User = Body(...), users_collection=Depends(get_use
     return {"id": str(result.inserted_id), "email": user.email, "name": user.name}
 
 
-@router.post("/api/auth/login/")
+@router.post("/login/")
 async def login_for_access_token(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()], users_collection=Depends(get_users_collection)
 ):
@@ -51,7 +51,7 @@ async def login_for_access_token(
 
 
 @router.get(
-    "/api/auth/profile/",
+    "/profile/",
     response_model=UserPublic,
     responses={
         200: {

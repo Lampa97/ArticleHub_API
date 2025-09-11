@@ -10,12 +10,12 @@ from utils.auth import get_current_active_user
 from utils.get_collections import get_articles_collection
 from utils.strip import change_id_name
 
-from .tasks import analyze_article
+from services.tasks import analyze_article
 
-router = APIRouter()
+router = APIRouter(prefix="/api/v1/articles", tags=["Articles"])
 
 
-@router.post("/api/articles/", status_code=status.HTTP_201_CREATED)
+@router.post("/", status_code=status.HTTP_201_CREATED)
 async def create_article(
     current_user: Annotated[UserInDB, Depends(get_current_active_user)],
     article: ArticleCreate = Body(...),
@@ -35,7 +35,7 @@ async def create_article(
     return Article(**article_dict)
 
 
-@router.get("/api/articles/", status_code=status.HTTP_200_OK, response_model=list[Article])
+@router.get("/", status_code=status.HTTP_200_OK, response_model=list[Article])
 async def list_articles(
     current_user: Annotated[UserInDB, Depends(get_current_active_user)],
     search: str = Query(None),
@@ -56,7 +56,7 @@ async def list_articles(
     return articles_list
 
 
-@router.get("/api/articles/{article_id}/", status_code=status.HTTP_200_OK, response_model=Article)
+@router.get("/{article_id}/", status_code=status.HTTP_200_OK, response_model=Article)
 async def get_article(
     current_user: Annotated[UserInDB, Depends(get_current_active_user)],
     article_id: str,
@@ -69,7 +69,7 @@ async def get_article(
     return article_dict
 
 
-@router.put("/api/articles/{article_id}/", status_code=status.HTTP_200_OK, response_model=Article)
+@router.put("/{article_id}/", status_code=status.HTTP_200_OK, response_model=Article)
 async def update_article(
     current_user: Annotated[UserInDB, Depends(get_current_active_user)],
     article_id: str,
@@ -94,7 +94,7 @@ async def update_article(
     return updated_article
 
 
-@router.delete("/api/articles/{article_id}/", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{article_id}/", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_article(
     current_user: Annotated[UserInDB, Depends(get_current_active_user)],
     article_id: str,
@@ -110,7 +110,7 @@ async def delete_article(
     return None
 
 
-@router.post("/api/articles/{article_id}/analyze/")
+@router.post("/{article_id}/analyze/")
 async def analyze_article_endpoint(
     article_id: str,
     articles_collection=Depends(get_articles_collection)

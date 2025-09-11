@@ -1,5 +1,5 @@
 from celery import Celery
-from api import tasks 
+from services import tasks 
 
 
 celery_app = Celery(
