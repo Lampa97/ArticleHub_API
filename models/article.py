@@ -1,6 +1,6 @@
 from typing import List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class Article(BaseModel):
@@ -38,15 +38,14 @@ class ArticleCreate(BaseModel):
             "tags": ["fastapi", "mongodb"]
         }
     """
-    title: str = Field(..., example="My Article Title")
-    content: str = Field(..., example="Article content goes here.")
-    tags: Optional[List[str]] = Field(default=[], example=["fastapi", "mongodb"])
+    title: str = Field(...)
+    content: str = Field(...)
+    tags: Optional[List[str]] = Field(default=[])
 
-    class Config:
-        schema_extra = {
+    model_config = ConfigDict(json_schema_extra={
             "example": {
                 "title": "My Article Title",
                 "content": "Article content goes here.",
                 "tags": ["fastapi", "mongodb"],
             }
-        }
+        })

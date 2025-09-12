@@ -4,6 +4,7 @@ from typing import Annotated
 from bson import ObjectId
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
 
+
 from models.article import Article, ArticleCreate
 from models.auth import UserInDB
 from utils.auth import get_current_active_user
@@ -100,7 +101,10 @@ async def get_article(
     Returns:
         Article: The requested article.
     """
-    article_dict = await articles_collection.find_one({"_id": ObjectId(article_id)})
+    try:
+        article_dict = await articles_collection.find_one({"_id": ObjectId(article_id)})
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid article ID format")
     if not article_dict:
         raise HTTPException(status_code=404, detail="Article not found")
     change_id_name(article_dict)
@@ -204,7 +208,7 @@ async def analyze_article_endpoint(
         dict: The updated article document, including the 'analysis' field.
     """
     task = analyze_article.delay(article_id)
-    task.get(timeout=1)
+    task.get(timeout=10)
     article_dict = await articles_collection.find_one({"_id": ObjectId(article_id)})
     if not article_dict:
         raise HTTPException(status_code=404, detail="Article not found")
