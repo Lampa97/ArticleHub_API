@@ -142,6 +142,16 @@ jobs:
           chmod +x ecs-cli
           sudo mv ecs-cli /usr/local/bin/ecs-cli
 
+      - name: Generate .env file for ECS Compose
+        run: |
+          echo "SECRET_KEY=${{ secrets.SECRET_KEY }}" >> .env
+          echo "ALGORITHM=${{ secrets.ALGORITHM }}" >> .env
+          echo "ACCESS_TOKEN_EXPIRE_MINUTES=60" >> .env
+          echo "DB_URL=${{ secrets.DB_URL }}" >> .env
+          echo "DB_NAME=${{ secrets.DB_NAME }}" >> .env
+          echo "CELERY_BROKER_URL=redis://redis:6379/0" >> .env
+          echo "CELERY_RESULT_BACKEND=redis://redis:6379/0" >> .env
+
       - name: Deploy docker-compose to ECS
         run: |
           ecs-cli compose --file docker-compose-ecs.yml --project-name articlehub service up --cluster ArticleHub1
