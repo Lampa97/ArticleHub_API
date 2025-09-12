@@ -88,70 +88,100 @@ jobs:
       - name: Push Docker image
         run: docker push ${{ secrets.DOCKER_USERNAME }}/articlehub:${{ github.sha }}
 
-  deploy-ecs:
+  deploy:
     runs-on: ubuntu-latest
     needs: build
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v2
+      - name: Set up SSH
+        uses: webfactory/ssh-agent@v0.9.0
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: eu-north-1
+          ssh-private-key: ${{ secrets.SSH_KEY }}
 
-      - name: Login to Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v2
-
-      - name: Build, tag, and push image to ECR
+      - name: Deploy to server
         run: |
-          docker build -t ${{ secrets.ECR_REPOSITORY }}:${{ github.sha }} .
-          docker tag ${{ secrets.ECR_REPOSITORY }}:${{ github.sha }} ${{ secrets.ECR_REPOSITORY }}:latest
-          docker push ${{ secrets.ECR_REPOSITORY }}:${{ github.sha }}
-          docker push ${{ secrets.ECR_REPOSITORY }}:latest
+            ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
+            
+            echo "Step 1: Pulling the latest code from the repository"
+            cd ArticleHub_API
+            sudo git checkout develop
+            sudo git pull
+                    
+                                  
+            echo "Step 2: Running docker commands on the remote server"
+            docker --version
+            docker compose version
+            sudo systemctl start docker
+            sudo systemctl enable docker
+            sudo sysctl vm.overcommit_memory=1
+            sudo docker compose down || true
+            sudo docker compose up -d --build
+            EOF
 
-      - name: Update ECS service
-        uses: aws-actions/amazon-ecs-update-service@v1
-        with:
-          cluster: ArticleEc2
-          service: articleEC2
-          task-definition: articlehub:1
+  # deploy-ecs:
+  #   runs-on: ubuntu-latest
+  #   needs: build
 
-  deploy-compose-ecs:
-    runs-on: ubuntu-latest
-    needs: build
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@v3
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+  #     - name: Configure AWS credentials
+  #       uses: aws-actions/configure-aws-credentials@v2
+  #       with:
+  #         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  #         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  #         aws-region: eu-north-1
 
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v2
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: eu-north-1
+  #     - name: Login to Amazon ECR
+  #       id: login-ecr
+  #       uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Install ECS CLI v2
-        run: |
-          curl -Lo ecs-cli https://amazon-ecs-cli.s3.amazonaws.com/ecs-cli-linux-amd64-latest
-          chmod +x ecs-cli
-          sudo mv ecs-cli /usr/local/bin/ecs-cli
+  #     - name: Build, tag, and push image to ECR
+  #       run: |
+  #         docker build -t ${{ secrets.ECR_REPOSITORY }}:${{ github.sha }} .
+  #         docker tag ${{ secrets.ECR_REPOSITORY }}:${{ github.sha }} ${{ secrets.ECR_REPOSITORY }}:latest
+  #         docker push ${{ secrets.ECR_REPOSITORY }}:${{ github.sha }}
+  #         docker push ${{ secrets.ECR_REPOSITORY }}:latest
 
-      - name: Generate .env file for ECS Compose
-        run: |
-          echo "SECRET_KEY=${{ secrets.SECRET_KEY }}" >> .env
-          echo "ALGORITHM=${{ secrets.ALGORITHM }}" >> .env
-          echo "ACCESS_TOKEN_EXPIRE_MINUTES=60" >> .env
-          echo "DB_URL=${{ secrets.DB_URL }}" >> .env
-          echo "DB_NAME=${{ secrets.DB_NAME }}" >> .env
-          echo "CELERY_BROKER_URL=redis://redis:6379/0" >> .env
-          echo "CELERY_RESULT_BACKEND=redis://redis:6379/0" >> .env
+  #     - name: Update ECS service
+  #       uses: aws-actions/amazon-ecs-update-service@v1
+  #       with:
+  #         cluster: ArticleEc2
+  #         service: articleEC2
+  #         task-definition: articlehub:1
 
-      - name: Deploy docker-compose to ECS
-        run: |
-          ecs-cli compose --file docker-compose-ecs.yml --project-name articlehub service up --cluster ArticleEc2
+  # deploy-compose-ecs:
+  #   runs-on: ubuntu-latest
+  #   needs: build
+
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@v3
+
+  #     - name: Configure AWS credentials
+  #       uses: aws-actions/configure-aws-credentials@v2
+  #       with:
+  #         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  #         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  #         aws-region: eu-north-1
+
+  #     - name: Install ECS CLI v2
+  #       run: |
+  #         curl -Lo ecs-cli https://amazon-ecs-cli.s3.amazonaws.com/ecs-cli-linux-amd64-latest
+  #         chmod +x ecs-cli
+  #         sudo mv ecs-cli /usr/local/bin/ecs-cli
+
+  #     - name: Generate .env file for ECS Compose
+  #       run: |
+  #         echo "SECRET_KEY=${{ secrets.SECRET_KEY }}" >> .env
+  #         echo "ALGORITHM=${{ secrets.ALGORITHM }}" >> .env
+  #         echo "ACCESS_TOKEN_EXPIRE_MINUTES=60" >> .env
+  #         echo "DB_URL=${{ secrets.DB_URL }}" >> .env
+  #         echo "DB_NAME=${{ secrets.DB_NAME }}" >> .env
+  #         echo "CELERY_BROKER_URL=redis://redis:6379/0" >> .env
+  #         echo "CELERY_RESULT_BACKEND=redis://redis:6379/0" >> .env
+
+  #     - name: Deploy docker-compose to ECS
+  #       run: |
+  #         ecs-cli compose --file docker-compose-ecs.yml --project-name articlehub service up --cluster ArticleEc2
