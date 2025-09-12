@@ -43,11 +43,8 @@ def test_analyze_article_integration():
         "tags": ["celery", "integration"]
     }
     article_id = db.articles.insert_one(article_data).inserted_id
-    time.sleep(2)  # Дать немного времени на запись
-
     # Запустить задачу анализа
     analyze_article.delay(str(article_id)).get(timeout=10)
-    time.sleep(5)  # Дать немного времени на обновление
 
     # Проверить наличие анализа
     article = db.articles.find_one({"_id": ObjectId(article_id)})

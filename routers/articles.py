@@ -9,7 +9,7 @@ from models.article import Article, ArticleCreate
 from models.auth import UserInDB
 from utils.auth import get_current_active_user
 from utils.get_collections import get_articles_collection
-from utils.strip import change_id_name
+from utils.id import change_id_name, check_correct_id
 
 from services.tasks import analyze_article
 
@@ -101,10 +101,8 @@ async def get_article(
     Returns:
         Article: The requested article.
     """
-    try:
-        article_dict = await articles_collection.find_one({"_id": ObjectId(article_id)})
-    except Exception:
-        raise HTTPException(status_code=400, detail="Invalid article ID format")
+    check_correct_id(article_id)
+    article_dict = await articles_collection.find_one({"_id": ObjectId(article_id)})
     if not article_dict:
         raise HTTPException(status_code=404, detail="Article not found")
     change_id_name(article_dict)
@@ -115,7 +113,7 @@ async def get_article(
 async def update_article(
     current_user: Annotated[UserInDB, Depends(get_current_active_user)],
     article_id: str,
-    article: Article = Body(...),
+    article: ArticleCreate = Body(...),
     articles_collection=Depends(get_articles_collection),
 ):
     """
@@ -135,6 +133,7 @@ async def update_article(
     Returns:
         Article: The updated article.
     """
+    check_correct_id(article_id)
     existing_article = await articles_collection.find_one({"_id": ObjectId(article_id)})
     if not existing_article:
         raise HTTPException(status_code=404, detail="Article not found")
@@ -175,6 +174,7 @@ async def delete_article(
     Returns:
         None
     """
+    check_correct_id(article_id)
     existing_article = await articles_collection.find_one({"_id": ObjectId(article_id)})
     if not existing_article:
         raise HTTPException(status_code=404, detail="Article not found")
@@ -187,8 +187,9 @@ async def delete_article(
 
 @router.post("/{article_id}/analyze/")
 async def analyze_article_endpoint(
+    current_user: Annotated[UserInDB, Depends(get_current_active_user)],
     article_id: str,
-    articles_collection=Depends(get_articles_collection)
+    articles_collection=Depends(get_articles_collection),
 ):
     """
     Analyze an article and return the updated article with analysis results.
@@ -207,6 +208,7 @@ async def analyze_article_endpoint(
     Returns:
         dict: The updated article document, including the 'analysis' field.
     """
+    check_correct_id(article_id)
     task = analyze_article.delay(article_id)
     task.get(timeout=10)
     article_dict = await articles_collection.find_one({"_id": ObjectId(article_id)})
