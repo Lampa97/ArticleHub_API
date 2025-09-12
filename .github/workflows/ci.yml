@@ -144,4 +144,4 @@ jobs:
 
       - name: Deploy docker-compose to ECS
         run: |
-          ecs-cli compose --file docker-compose.yml --project-name articlehub service up --cluster ArticleHub1
+          ecs-cli compose --file docker-compose-ecs.yml --project-name articlehub service up --cluster ArticleHub1
