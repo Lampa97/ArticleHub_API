@@ -4,14 +4,12 @@ from typing import Annotated
 from bson import ObjectId
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, status
 
-
 from models.article import Article, ArticleCreate
 from models.auth import UserInDB
+from services.tasks import analyze_article
 from utils.auth import get_current_active_user
 from utils.get_collections import get_articles_collection
 from utils.id import change_id_name, check_correct_id
-
-from services.tasks import analyze_article
 
 router = APIRouter(prefix="/api/v1/articles", tags=["Articles"])
 

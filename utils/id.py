@@ -1,5 +1,5 @@
-from fastapi import HTTPException
 from bson import ObjectId
+from fastapi import HTTPException
 
 
 def change_id_name(obj: dict | list):
@@ -34,4 +34,4 @@ def check_correct_id(id_str: str) -> bool:
         ObjectId(id_str)
         return True
     except Exception:
-        raise HTTPException(status_code=400, detail="Invalid article ID format") 
+        raise HTTPException(status_code=400, detail="Invalid article ID format")

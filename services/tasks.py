@@ -1,9 +1,10 @@
-from pymongo import MongoClient
 from bson import ObjectId
-from config.settings import DB_URL, DB_NAME
-
 from celery import shared_task
+from pymongo import MongoClient
+
+from config.settings import DB_NAME, DB_URL
 from models.log import Log
+
 
 @shared_task
 def send_welcome_email(email, name):
@@ -15,6 +16,7 @@ def send_welcome_email(email, name):
     client = MongoClient(DB_URL)
     db = client[DB_NAME]
     db.logs.insert_one({"type": "user", "message": log_line})
+
 
 @shared_task
 def analyze_article(article_id):
@@ -31,9 +33,9 @@ def analyze_article(article_id):
     word_count = len(article["content"].split())
     unique_tags = len(set(article.get("tags", [])))
     db.articles.update_one(
-        {"_id": ObjectId(article_id)},
-        {"$set": {"analysis": {"word_count": word_count, "unique_tags": unique_tags}}}
+        {"_id": ObjectId(article_id)}, {"$set": {"analysis": {"word_count": word_count, "unique_tags": unique_tags}}}
     )
+
 
 @shared_task
 def log_articles_count_task():

@@ -1,5 +1,7 @@
-from pydantic import BaseModel, Field
 from datetime import datetime, timezone
+
+from pydantic import BaseModel, Field
+
 
 class Log(BaseModel):
     type: str = Field(..., description="Log type ('user', 'article')")

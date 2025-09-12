@@ -1,9 +1,11 @@
 import time
+
 import pytest
 from bson import ObjectId
-from config.settings import LOGS_DIR, DB_URL, DB_NAME
-from services.tasks import send_welcome_email, analyze_article
 from pymongo import MongoClient
+
+from config.settings import DB_NAME, DB_URL, LOGS_DIR
+from services.tasks import analyze_article, send_welcome_email
 
 
 def test_send_welcome_email_integration():
@@ -25,7 +27,6 @@ def test_send_welcome_email_integration():
     assert log is not None
 
 
-
 def test_analyze_article_integration():
     """
     Integration test for Celery analyze_article task.
@@ -40,7 +41,7 @@ def test_analyze_article_integration():
     article_data = {
         "title": "Celery Article",
         "content": "Celery integration test content.",
-        "tags": ["celery", "integration"]
+        "tags": ["celery", "integration"],
     }
     article_id = db.articles.insert_one(article_data).inserted_id
     # Запустить задачу анализа

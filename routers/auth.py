@@ -6,10 +6,9 @@ from fastapi.security import OAuth2PasswordRequestForm
 
 from config.settings import ACCESS_TOKEN_EXPIRE_MINUTES
 from models.auth import Token, User, UserInDB, UserPublic
+from services.tasks import send_welcome_email
 from utils.auth import authenticate_user, create_access_token, get_current_active_user, get_password_hash
 from utils.get_collections import get_users_collection
-
-from services.tasks import send_welcome_email
 
 router = APIRouter(prefix="/api/v1/auth", tags=["Auth"])
 

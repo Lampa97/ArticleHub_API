@@ -10,6 +10,7 @@ def get_logger(log_file: str):
     logger.addHandler(handler)
     return logger
 
+
 def write_log(log_line, log_file="logs/general_logs.log"):
     logger = get_logger(log_file)
     logger.info(log_line)

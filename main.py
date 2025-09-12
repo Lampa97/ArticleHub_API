@@ -2,11 +2,10 @@ import os
 
 from fastapi import FastAPI
 
-from routers.articles import router as articles_router
-from routers.auth import router as auth_router
 from config.db import MongoDBConnector
 from config.settings import LOGS_DIR
-
+from routers.articles import router as articles_router
+from routers.auth import router as auth_router
 
 os.makedirs(LOGS_DIR, exist_ok=True)
 

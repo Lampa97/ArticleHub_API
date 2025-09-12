@@ -15,12 +15,14 @@ class Article(BaseModel):
         author (Optional[str]): ID of the user who authored the article.
         created_at (Optional[str]): ISO-formatted creation timestamp.
     """
+
     id: str
     title: str
     content: str
     tags: Optional[list[str]] = []
     author: Optional[str] = None  # foreign key (user id)
     created_at: Optional[str] = None
+
 
 class ArticleCreate(BaseModel):
     """
@@ -38,14 +40,17 @@ class ArticleCreate(BaseModel):
             "tags": ["fastapi", "mongodb"]
         }
     """
+
     title: str = Field(...)
     content: str = Field(...)
     tags: Optional[List[str]] = Field(default=[])
 
-    model_config = ConfigDict(json_schema_extra={
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "title": "My Article Title",
                 "content": "Article content goes here.",
                 "tags": ["fastapi", "mongodb"],
             }
-        })
+        }
+    )

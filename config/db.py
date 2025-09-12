@@ -1,6 +1,6 @@
 from motor.motor_asyncio import AsyncIOMotorClient
 
-from config.settings import DB_URL, DB_NAME
+from config.settings import DB_NAME, DB_URL
 
 
 class MongoDBConnector:

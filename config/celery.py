@@ -1,14 +1,10 @@
 from celery import Celery
-from services import tasks 
 
+from services import tasks
 
-celery_app = Celery(
-    "worker",
-    broker="redis://redis:6379/0",
-    backend="redis://redis:6379/0"
-)
+celery_app = Celery("worker", broker="redis://redis:6379/0", backend="redis://redis:6379/0")
 
-celery_app.autodiscover_tasks(['services.tasks']) 
+celery_app.autodiscover_tasks(["services.tasks"])
 
 celery_app.conf.beat_schedule = {
     "log-articles-count-daily": {
