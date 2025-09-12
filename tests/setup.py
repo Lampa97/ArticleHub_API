@@ -1,14 +1,11 @@
 import os
 
-from dotenv import load_dotenv
 from fastapi import FastAPI
 from motor.motor_asyncio import AsyncIOMotorClient
 
-from config.settings import LOGS_DIR
+from config.settings import LOGS_DIR, DB_URL
 from routers.articles import router as articles_router
 from routers.auth import router as auth_router
-
-load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), "..", ".env.test"))
 
 
 class TestMongoDBConnector:
@@ -16,8 +13,8 @@ class TestMongoDBConnector:
         self.app = app
 
     async def startup_db_client(self):
-        self.app.mongodb_client = AsyncIOMotorClient(os.getenv("TEST_DB_URL"))
-        self.app.mongodb = self.app.mongodb_client[os.getenv("TEST_DB_NAME")]
+        self.app.mongodb_client = AsyncIOMotorClient(os.getenv("DB_URL"))
+        self.app.mongodb = self.app.mongodb_client["Test"]
 
     async def shutdown_db_client(self):
         self.app.mongodb_client.close()

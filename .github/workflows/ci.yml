@@ -32,7 +32,7 @@ jobs:
       ALGORITHM: ${{ secrets.ALGORITHM }}
       ACCESS_TOKEN_EXPIRE_MINUTES: 60
       DB_URL: ${{ secrets.DB_URL }}
-      DB_NAME: ${{ secrets.DB_NAME }}
+      DB_NAME: Test
       CELERY_BROKER_URL: redis://redis:6379/0
       CELERY_RESULT_BACKEND: redis://redis:6379/0
 
