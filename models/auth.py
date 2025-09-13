@@ -1,6 +1,6 @@
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr, ValidationError, field_validator
 
 
 class Token(BaseModel):
@@ -37,9 +37,25 @@ class User(BaseModel):
         password (Optional[str]): The user's password (optional for public models).
     """
 
-    email: str
+    email: EmailStr
     name: str
     password: Optional[str] = None
+
+    @field_validator("name")
+    def name_no_spaces(cls, name):
+        if " " in name:
+            raise ValueError("Name must not contain spaces")
+        return name
+
+    @field_validator("password")
+    def password_strength(cls, password):
+        if len(password) < 8:
+            raise ValidationError("Password must be at least 8 characters")
+        if not any(c.isdigit() for c in password):
+            raise ValidationError("Password must contain at least one digit")
+        if not any(c.isalpha() for c in password):
+            raise ValidationError("Password must contain at least one letter")
+        return password
 
 
 class UserInDB(User):
@@ -66,5 +82,5 @@ class UserPublic(BaseModel):
     """
 
     id: str
-    email: str
+    email: EmailStr
     name: str
