@@ -19,6 +19,7 @@ db_connector = MongoDBConnector(app)
 app.add_event_handler("startup", db_connector.startup_db_client)
 app.add_event_handler("shutdown", db_connector.shutdown_db_client)
 
+
 @app.get("/", response_class=HTMLResponse, include_in_schema=False)
 async def root():
     return """

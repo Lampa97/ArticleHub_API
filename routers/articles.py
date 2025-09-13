@@ -201,11 +201,8 @@ async def delete_article(
                         "tags": ["fastapi", "mongodb"],
                         "created_at": "2025-09-13T06:36:16.521942+00:00",
                         "author": "68c3cadf9cfa7ae93702205f",
-                        "analysis": {
-                            "word_count": 7,
-                            "unique_tags": 2
-                        },
-                        "id": "68c510e07b0d53eff45954ff"
+                        "analysis": {"word_count": 7, "unique_tags": 2},
+                        "id": "68c510e07b0d53eff45954ff",
                     }
                 }
             },

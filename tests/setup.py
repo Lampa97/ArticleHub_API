@@ -3,7 +3,7 @@ import os
 from fastapi import FastAPI
 from motor.motor_asyncio import AsyncIOMotorClient
 
-from config.settings import LOGS_DIR, DB_URL
+from config.settings import DB_URL, LOGS_DIR
 from routers.articles import router as articles_router
 from routers.auth import router as auth_router
 
