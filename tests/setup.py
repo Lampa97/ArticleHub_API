@@ -13,7 +13,7 @@ class TestMongoDBConnector:
         self.app = app
 
     async def startup_db_client(self):
-        self.app.mongodb_client = AsyncIOMotorClient(os.getenv("DB_URL"))
+        self.app.mongodb_client = AsyncIOMotorClient(DB_URL)
         self.app.mongodb = self.app.mongodb_client["Test"]
 
     async def shutdown_db_client(self):

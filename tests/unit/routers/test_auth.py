@@ -1,7 +1,8 @@
 from unittest.mock import AsyncMock, patch
+
 import pytest
-from pydantic import ValidationError
 from fastapi import HTTPException, status
+from pydantic import ValidationError
 
 from models.auth import User
 from utils.auth import authenticate_user, get_current_user
@@ -80,25 +81,31 @@ def test_get_profile(client):
     assert data["name"] == user_data["name"]
     assert "id" in data
 
+
 def test_invalid_email():
     with pytest.raises(ValidationError):
         User(email="not-an-email", name="TestUser", password="Password1")
+
 
 def test_name_with_spaces():
     with pytest.raises(ValidationError):
         User(email="test@example.com", name="Test User", password="Password1")
 
+
 def test_short_password():
     with pytest.raises(ValidationError):
         User(email="test@example.com", name="TestUser", password="short1")
+
 
 def test_password_no_digit():
     with pytest.raises(ValidationError):
         User(email="test@example.com", name="TestUser", password="Password")
 
+
 def test_password_no_letter():
     with pytest.raises(ValidationError):
         User(email="test@example.com", name="TestUser", password="12345678")
+
 
 @pytest.mark.asyncio
 async def test_authenticate_user_not_found():
@@ -106,6 +113,7 @@ async def test_authenticate_user_not_found():
     users_collection.find_one.return_value = None
     result = await authenticate_user(users_collection, "notfound@example.com", "password")
     assert result is False
+
 
 @pytest.mark.asyncio
 async def test_get_current_user_invalid_token():
@@ -117,6 +125,7 @@ async def test_get_current_user_invalid_token():
     assert exc_info.value.status_code == status.HTTP_401_UNAUTHORIZED
     assert exc_info.value.detail == "Could not validate credentials"
 
+
 @pytest.mark.asyncio
 async def test_get_current_user_user_not_found(monkeypatch):
     request = AsyncMock()
@@ -124,7 +133,8 @@ async def test_get_current_user_user_not_found(monkeypatch):
     users_collection.find_one.return_value = None
     request.app.mongodb = {"users": users_collection}
 
-    from utils.auth import create_access_token, SECRET_KEY, ALGORITHM
+    from utils.auth import ALGORITHM, SECRET_KEY, create_access_token
+
     token = create_access_token({"sub": "notfound@example.com"})
     with pytest.raises(HTTPException) as exc_info:
         await get_current_user(request, token)

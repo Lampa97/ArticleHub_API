@@ -25,6 +25,7 @@ def auth_token(client):
     token = response.json()["access_token"]
     return token
 
+
 @pytest.fixture
 def another_user_auth_token(client):
 
@@ -63,6 +64,7 @@ def created_article_id(client, auth_token):
     response = client.post("/api/v1/articles/", json=payload, headers=headers)
     return response.json()["id"]
 
+
 @pytest.fixture
 def another_user_article_id(client, another_user_auth_token):
     """
@@ -78,6 +80,7 @@ def another_user_article_id(client, another_user_auth_token):
     headers = {"Authorization": f"Bearer {another_user_auth_token}"}
     response = client.post("/api/v1/articles/", json=payload, headers=headers)
     return response.json()["id"]
+
 
 @pytest.fixture
 def authorized_user(client, auth_token):
