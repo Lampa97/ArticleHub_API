@@ -1,0 +1,41 @@
+version: '3'
+services:
+  backend:
+    image: 857769432104.dkr.ecr.eu-north-1.amazonaws.com/articlehub/v1
+    command: sh -c "uvicorn main:app --host 0.0.0.0 --port 8000 --reload"
+    env_file:
+      - ./.env
+    ports:
+      - "8000:8000"
+
+  nginx:
+    image: nginx:latest
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+
+  redis:
+    image: redis:latest
+    ports:
+      - "6379:6379"
+    env_file:
+      - .env
+
+  celery:
+    image: 857769432104.dkr.ecr.eu-north-1.amazonaws.com/articlehub/v1
+    command: celery -A config.celery.celery_app worker -l INFO
+    env_file:
+      - ./.env
+    depends_on:
+      - backend
+      - redis
+
+  celery-beat:
+    image: 857769432104.dkr.ecr.eu-north-1.amazonaws.com/articlehub/v1
+    command: celery -A config.celery.celery_app beat -l INFO
+    env_file:
+      - ./.env
+    depends_on:
+      - backend
+      - redis

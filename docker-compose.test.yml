@@ -1,0 +1,79 @@
+services:
+  app-test:
+    build: .
+    command: uvicorn main:app --host 0.0.0.0 --port 8000
+    env_file:
+      - ./.env
+    environment:
+      DB_NAME: Test
+    volumes:
+      - .:/code
+      - ./logs:/code/logs
+    depends_on:
+      - redis-test
+  backend-test:
+    build: .
+    command: sh -c "$TEST_CMD"
+    env_file:
+      - ./.env
+    environment:
+      DB_NAME: Test
+      TEST_CMD: "pytest -vv"
+    volumes:
+      - .:/code
+      - ./logs:/code/logs
+    depends_on:
+      - redis-test
+      - app-test
+
+  # db-test:
+  #   image: mongo:latest
+  #   environment:
+  #     MONGO_INITDB_DATABASE: Test
+  #     MONGO_LOG_LEVEL: "error"
+  #   env_file:
+  #     - ./.env.test
+  #   expose:
+  #     - "27017"
+  #   volumes:
+  #     - mongodb_test_data:/data/db
+
+  redis-test:
+    image: redis
+    expose:
+      - "6379"
+    volumes:
+      - redis_test_data:/data
+
+  celery-test:
+    build: .
+    command: celery -A config.celery.celery_app worker -l INFO
+    env_file:
+      - ./.env
+    environment:
+      DB_NAME: Test
+    depends_on:
+      - backend-test
+      - redis-test
+    volumes:
+      - ./logs:/code/logs
+
+  celery-beat-test:
+    build: .
+    command: celery -A config.celery.celery_app beat -l INFO
+    env_file:
+      - ./.env
+    environment:
+      DB_NAME: Test
+    depends_on:
+      - backend-test
+      - redis-test
+    volumes:
+      - ./logs:/code/logs
+
+volumes:
+  # mongodb_test_data:
+  redis_test_data:
+
+networks:
+  default:

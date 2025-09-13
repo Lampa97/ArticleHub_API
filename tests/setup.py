@@ -1,0 +1,31 @@
+import os
+
+from fastapi import FastAPI
+from motor.motor_asyncio import AsyncIOMotorClient
+
+from config.settings import LOGS_DIR, DB_URL
+from routers.articles import router as articles_router
+from routers.auth import router as auth_router
+
+
+class TestMongoDBConnector:
+    def __init__(self, app):
+        self.app = app
+
+    async def startup_db_client(self):
+        self.app.mongodb_client = AsyncIOMotorClient(os.getenv("DB_URL"))
+        self.app.mongodb = self.app.mongodb_client["Test"]
+
+    async def shutdown_db_client(self):
+        self.app.mongodb_client.close()
+
+
+os.makedirs(LOGS_DIR, exist_ok=True)
+
+app = FastAPI()
+app.include_router(auth_router)
+app.include_router(articles_router)
+
+db_connector = TestMongoDBConnector(app)
+app.add_event_handler("startup", db_connector.startup_db_client)
+app.add_event_handler("shutdown", db_connector.shutdown_db_client)
