@@ -1,0 +1,25 @@
+[run]
+source =     
+    services
+omit =
+    */tests/*
+    *main.py*
+    */config/*
+    *__init__.py*
+    */routers/*
+    */models/*
+    */utils/*
+
+[report]
+omit =
+    */tests/*
+    *main.py*
+    */config/*
+    *__init__.py*
+    */routers/*
+    */models/*
+    */utils/*
+
+fail_under = 0
+show_missing = True
+skip_covered = False

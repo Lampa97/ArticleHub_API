@@ -50,11 +50,11 @@ class User(BaseModel):
     @field_validator("password")
     def password_strength(cls, password):
         if len(password) < 8:
-            raise ValidationError("Password must be at least 8 characters")
+            raise ValueError("Password must be at least 8 characters")
         if not any(c.isdigit() for c in password):
-            raise ValidationError("Password must contain at least one digit")
+            raise ValueError("Password must contain at least one digit")
         if not any(c.isalpha() for c in password):
-            raise ValidationError("Password must contain at least one letter")
+            raise ValueError("Password must contain at least one letter")
         return password
 
 
