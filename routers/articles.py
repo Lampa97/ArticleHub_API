@@ -14,7 +14,12 @@ from utils.id import change_id_name, check_correct_id
 router = APIRouter(prefix="/api/v1/articles", tags=["Articles"])
 
 
-@router.post("/", status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/",
+    status_code=status.HTTP_201_CREATED,
+    response_model=Article,
+    summary="Create a new article",
+)
 async def create_article(
     current_user: Annotated[UserInDB, Depends(get_current_active_user)],
     article: ArticleCreate = Body(...),
@@ -183,7 +188,30 @@ async def delete_article(
     return None
 
 
-@router.post("/{article_id}/analyze/")
+@router.post(
+    "/{article_id}/analyze/",
+    responses={
+        200: {
+            "description": "Analyzed article with analysis results",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "title": "My Article Title",
+                        "content": "Article content goes here and its new.",
+                        "tags": ["fastapi", "mongodb"],
+                        "created_at": "2025-09-13T06:36:16.521942+00:00",
+                        "author": "68c3cadf9cfa7ae93702205f",
+                        "analysis": {
+                            "word_count": 7,
+                            "unique_tags": 2
+                        },
+                        "id": "68c510e07b0d53eff45954ff"
+                    }
+                }
+            },
+        }
+    },
+)
 async def analyze_article_endpoint(
     current_user: Annotated[UserInDB, Depends(get_current_active_user)],
     article_id: str,

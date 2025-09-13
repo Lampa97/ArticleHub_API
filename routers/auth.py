@@ -13,7 +13,11 @@ from utils.get_collections import get_users_collection
 router = APIRouter(prefix="/api/v1/auth", tags=["Auth"])
 
 
-@router.post("/register/", status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/register/",
+    status_code=status.HTTP_201_CREATED,
+    response_model=UserPublic,
+)
 async def register_user(user: User = Body(...), users_collection=Depends(get_users_collection)):
     """
     Register a new user.
@@ -43,7 +47,10 @@ async def register_user(user: User = Body(...), users_collection=Depends(get_use
     return {"id": str(result.inserted_id), "email": user.email, "name": user.name}
 
 
-@router.post("/login/")
+@router.post(
+    "/login/",
+    response_model=Token,
+)
 async def login_for_access_token(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()], users_collection=Depends(get_users_collection)
 ):
@@ -83,14 +90,6 @@ async def login_for_access_token(
 @router.get(
     "/profile/",
     response_model=UserPublic,
-    responses={
-        200: {
-            "description": "User profile",
-            "content": {
-                "application/json": {"example": {"id": "64f09b...", "email": "user@example.com", "name": "John Doe"}}
-            },
-        }
-    },
 )
 async def get_profile(current_user: Annotated[UserInDB, Depends(get_current_active_user)]):
     """
