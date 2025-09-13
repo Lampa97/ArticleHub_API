@@ -134,7 +134,7 @@ ssh <your-user>@<your-server-ip>
 ### 2. Clone and configure
 
 ```bash
-git clone https://github.com/<your-username>/ArticleHub_API.git
+git clone https://github.com/Lampa97/ArticleHub_API.git
 cd ArticleHub_API
 cp .env.example .env
 # Edit .env with production values
