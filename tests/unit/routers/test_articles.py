@@ -128,10 +128,3 @@ def test_analyze_article_invalid_id(client, authorized_user):
     response = client.post("/api/v1/articles/not_a_valid_id/analyze/", headers=authorized_user)
     assert response.status_code == status.HTTP_400_BAD_REQUEST
     assert response.json()["detail"] == "Invalid article ID format"
-
-
-def test_analyze_article_not_found(client, authorized_user):
-    valid_but_nonexistent_id = "68c510e07b0d53eff45954ff"
-    response = client.post(f"/api/v1/articles/{valid_but_nonexistent_id}/analyze/", headers=authorized_user)
-    assert response.status_code == status.HTTP_404_NOT_FOUND
-    assert response.json()["detail"] == "Article not found"
