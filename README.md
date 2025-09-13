@@ -105,6 +105,26 @@ Or use the provided `.bat` scripts on Windows.
 - Domain name pointed to your server (for HTTPS with Let's Encrypt)
 - Certbot installed for SSL certificates (if using Let's Encrypt)
 
+---
+
+## GitHub Actions Secrets
+
+To enable CI/CD and deployment, you must set the following secrets in your GitHub repository settings (`Settings` → `Secrets and variables` → `Actions`):
+
+- `ALGORITHM`
+- `DB_NAME`
+- `DB_URL`
+- `DOCKER_PASSWORD`
+- `DOCKER_USERNAME`
+- `SECRET_KEY`
+- `SERVER_IP`
+- `SSH_KEY`
+- `SSH_USER`
+
+These secrets are required for building, testing, pushing Docker images, and deploying to your remote server.
+
+---
+
 ### 1. SSH into your server
 
 ```bash

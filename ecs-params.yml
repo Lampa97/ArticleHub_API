@@ -1,3 +1,0 @@
-version: 1
-task_definition:
-  network_mode: awsvpc
