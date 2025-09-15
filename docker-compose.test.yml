@@ -10,7 +10,7 @@ services:
       - .:/code
       - ./logs:/code/logs
     depends_on:
-      - redis-test
+      - redis
   backend-test:
     build: .
     command: sh -c "$TEST_CMD"
@@ -23,7 +23,7 @@ services:
       - .:/code
       - ./logs:/code/logs
     depends_on:
-      - redis-test
+      - redis
       - app-test
 
   # db-test:
@@ -38,10 +38,10 @@ services:
   #   volumes:
   #     - mongodb_test_data:/data/db
 
-  redis-test:
+  redis:
     image: redis
-    expose:
-      - "6379"
+    ports:
+      - "6379:6379"
     volumes:
       - redis_test_data:/data
 
@@ -54,7 +54,7 @@ services:
       DB_NAME: Test
     depends_on:
       - backend-test
-      - redis-test
+      - redis
     volumes:
       - ./logs:/code/logs
 
@@ -67,7 +67,7 @@ services:
       DB_NAME: Test
     depends_on:
       - backend-test
-      - redis-test
+      - redis
     volumes:
       - ./logs:/code/logs
 
@@ -77,3 +77,4 @@ volumes:
 
 networks:
   default:
+    driver: bridge

@@ -4,7 +4,7 @@ import pytest
 from bson import ObjectId
 from pymongo import MongoClient
 
-from config.settings import DB_NAME, DB_URL, LOGS_DIR
+from config.settings import DB_NAME, DB_URL
 from services.tasks import analyze_article, send_welcome_email
 
 

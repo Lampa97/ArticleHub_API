@@ -80,7 +80,7 @@ async def authenticate_user(users_collection, email: str, password: str):
     return user
 
 
-def create_access_token(data: dict, expires_delta: timedelta | None = None):
+def create_access_token(data: dict, expires_delta: timedelta | None = None) -> str:
     """
     Create a JWT access token for authentication.
 
@@ -101,7 +101,7 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
     return encoded_jwt
 
 
-async def get_current_user(request: Request, token: Annotated[str, Depends(oauth2_scheme)]):
+async def get_current_user(request: Request, token: Annotated[str, Depends(oauth2_scheme)]) -> UserInDB:
     """
     Retrieve the current authenticated user based on the JWT token.
 
@@ -137,7 +137,7 @@ async def get_current_user(request: Request, token: Annotated[str, Depends(oauth
 
 async def get_current_active_user(
     current_user: Annotated[User, Depends(get_current_user)],
-):
+) -> User:
     """
     Dependency to retrieve the current active user.
 

@@ -1,6 +1,6 @@
 from typing import List, Optional
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 class Article(BaseModel):
@@ -54,3 +54,7 @@ class ArticleCreate(BaseModel):
             }
         }
     )
+
+    @field_validator("title")
+    def capitalize_title(cls, title):
+        return title.capitalize()

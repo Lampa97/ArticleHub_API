@@ -1,0 +1,73 @@
+services:
+  backend:
+    build: .
+    command: sh -c "uvicorn main:app --host 0.0.0.0 --port 8000 --reload"
+    env_file:
+      - ./.env
+    volumes:
+      - .:/code
+    # ports:
+    #   - "8000:8000"
+    # depends_on:
+    #   db:
+    #     condition: service_healthy
+
+  # db:
+  #   image: mongo:latest
+  #   env_file:
+  #     - ./.env
+  #   expose:
+  #     - "27017"
+  #   volumes:
+  #     - mongodb_data:/data/db
+  #   healthcheck:
+  #       test: ["CMD-SHELL", "mongo --eval 'db.runCommand({ ping: 1 })'"]
+  #       interval: 10s
+  #       timeout: 5s
+  #       retries: 5
+
+  nginx:
+    build:
+      context: ./nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.local.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - backend
+
+  redis:
+    image: redis
+    expose:
+      - "6379"
+    env_file:
+      - .env
+    volumes:
+      - redis_data:/data
+
+  celery:
+    build: .
+    command: celery -A config.celery.celery_app worker -l INFO
+    env_file:
+      - ./.env
+    depends_on:
+      - backend
+      - redis
+      # - db
+
+  celery-beat:
+    build: .
+    command: celery -A config.celery.celery_app beat -l INFO
+    env_file:
+      - ./.env
+    depends_on:
+      - backend
+      - redis
+      # - db
+
+volumes:
+  # mongodb_data:
+  redis_data:
+
+networks:
+  default:

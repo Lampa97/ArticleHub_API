@@ -2,19 +2,21 @@ from unittest.mock import patch
 
 import pytest
 from bson import ObjectId
-from fastapi import status
+from fastapi import HTTPException, status
+
+from utils.id import check_correct_id
 
 
 def test_create_article(client, auth_token):
     """
     Test creating a new article.
     """
-    payload = {"title": "Test Article", "content": "This is a test article.", "tags": ["test", "fastapi"]}
+    payload = {"title": "test Article", "content": "This is a test article.", "tags": ["test", "fastapi"]}
     headers = {"Authorization": f"Bearer {auth_token}"}
     response = client.post("/api/v1/articles/", json=payload, headers=headers)
     assert response.status_code == status.HTTP_201_CREATED
     data = response.json()
-    assert data["title"] == "Test Article"
+    assert data["title"] == "Test article"
     assert data["content"] == "This is a test article."
     assert "id" in data
 
@@ -46,7 +48,7 @@ def test_update_article(client, auth_token, created_article_id):
     """
     payload = {
         "id": created_article_id,  # если требуется
-        "title": "Updated Title",
+        "title": "updated Title",
         "content": "Updated content.",
         "tags": ["updated"],
         "author": "testuser@example.com",  # или id пользователя, если требуется
@@ -56,7 +58,7 @@ def test_update_article(client, auth_token, created_article_id):
     response = client.put(f"/api/v1/articles/{created_article_id}/", json=payload, headers=headers)
     assert response.status_code == status.HTTP_200_OK
     data = response.json()
-    assert data["title"] == "Updated Title"
+    assert data["title"] == "Updated title"
     assert data["content"] == "Updated content."
 
 
@@ -84,3 +86,45 @@ def test_analyze_article_mocked(client, auth_token, created_article_id):
         data = response.json()
         assert "analysis" in data
         mock_delay.assert_called_once_with(created_article_id)
+
+
+def test_check_correct_id_invalid():
+    with pytest.raises(HTTPException) as exc_info:
+        check_correct_id("not_a_valid_id")
+    assert exc_info.value.status_code == 400
+    assert exc_info.value.detail == "Invalid article ID format"
+
+
+def test_get_article_invalid_id(client, authorized_user):
+    response = client.get("/api/v1/articles/not_a_valid_id/", headers=authorized_user)
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json()["detail"] == "Invalid article ID format"
+
+
+def test_get_article_not_found(client, authorized_user):
+    valid_but_nonexistent_id = "68c510e07b0d53eff45954ff"
+    response = client.get(f"/api/v1/articles/{valid_but_nonexistent_id}/", headers=authorized_user)
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+    assert response.json()["detail"] == "Article not found"
+
+
+def test_update_article_not_author(client, authorized_user, another_user_article_id):
+    response = client.put(
+        f"/api/v1/articles/{another_user_article_id}/",
+        json={"title": "New Title", "content": "New Content"},
+        headers=authorized_user,
+    )
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+    assert response.json()["detail"] == "Not authorized to update this article"
+
+
+def test_delete_article_not_author(client, authorized_user, another_user_article_id):
+    response = client.delete(f"/api/v1/articles/{another_user_article_id}/", headers=authorized_user)
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+    assert response.json()["detail"] == "Not authorized to delete this article"
+
+
+def test_analyze_article_invalid_id(client, authorized_user):
+    response = client.post("/api/v1/articles/not_a_valid_id/analyze/", headers=authorized_user)
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json()["detail"] == "Invalid article ID format"

@@ -69,7 +69,7 @@ jobs:
           pip install -r requirements.txt
 
       - name: Run unit tests
-        run: pytest tests/unit
+        run: pytest --cov=. --cov-config=.coveragerc.unit tests/unit
 
   build:
     runs-on: ubuntu-latest

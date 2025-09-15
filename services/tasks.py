@@ -7,7 +7,7 @@ from models.log import Log
 
 
 @shared_task
-def send_welcome_email(email, name):
+def send_welcome_email(email: str, name: str):
     """
     Celery task to send a welcome email to a new user.
     Writes a log entry to the 'logs' collection in MongoDB.
@@ -19,7 +19,7 @@ def send_welcome_email(email, name):
 
 
 @shared_task
-def analyze_article(article_id):
+def analyze_article(article_id: str):
     """
     Celery task to analyze an article.
     Calculates word count and number of unique tags, then updates the article document

@@ -3,7 +3,7 @@ import os
 from fastapi import FastAPI
 from motor.motor_asyncio import AsyncIOMotorClient
 
-from config.settings import LOGS_DIR, DB_URL
+from config.settings import DB_URL, LOGS_DIR
 from routers.articles import router as articles_router
 from routers.auth import router as auth_router
 
@@ -13,7 +13,7 @@ class TestMongoDBConnector:
         self.app = app
 
     async def startup_db_client(self):
-        self.app.mongodb_client = AsyncIOMotorClient(os.getenv("DB_URL"))
+        self.app.mongodb_client = AsyncIOMotorClient(DB_URL)
         self.app.mongodb = self.app.mongodb_client["Test"]
 
     async def shutdown_db_client(self):
